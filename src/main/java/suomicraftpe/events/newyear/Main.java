@@ -29,7 +29,11 @@ public class Main extends PluginBase {
     public void onEnable() {
         saveDefaultConfig();
         config = getConfig();
-        getServer().getScheduler().scheduleDelayedRepeatingTask(this, new Task(), config.getInt("tick"), config.getInt("tick"), true);
+        if (getServer().getLevelByName(config.getString("level")) != null) {
+            getServer().getScheduler().scheduleDelayedRepeatingTask(this, new Task(), config.getInt("tick"), config.getInt("tick"), true);
+        } else {
+            getServer().getLogger().notice("Plugin not enabled due to invalid world name in config");
+        }
     }
 
     public static void spawnFirework(Vector3 pos) {
@@ -69,9 +73,11 @@ class Task extends Thread {
 
     @Override
     public void run() {
-        Main.spawnFirework(new Vector3(Main.config.getInt("pos1.x"), Main.config.getInt("pos1.y"), Main.config.getInt("pos1.z")));
-        Main.spawnFirework(new Vector3(Main.config.getInt("pos2.x"), Main.config.getInt("pos2.y"), Main.config.getInt("pos2.z")));
-        Main.spawnFirework(new Vector3(Main.config.getInt("pos3.x"), Main.config.getInt("pos3.y"), Main.config.getInt("pos3.z")));
-        Main.spawnFirework(new Vector3(Main.config.getInt("pos4.x"), Main.config.getInt("pos4.y"), Main.config.getInt("pos4.z")));
+        if (Server.getInstance().getOnlinePlayers().size() > 0) {
+            Main.spawnFirework(new Vector3(Main.config.getInt("pos1.x"), Main.config.getInt("pos1.y"), Main.config.getInt("pos1.z")));
+            Main.spawnFirework(new Vector3(Main.config.getInt("pos2.x"), Main.config.getInt("pos2.y"), Main.config.getInt("pos2.z")));
+            Main.spawnFirework(new Vector3(Main.config.getInt("pos3.x"), Main.config.getInt("pos3.y"), Main.config.getInt("pos3.z")));
+            Main.spawnFirework(new Vector3(Main.config.getInt("pos4.x"), Main.config.getInt("pos4.y"), Main.config.getInt("pos4.z")));
+        }
     }
 }
