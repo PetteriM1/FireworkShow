@@ -30,7 +30,7 @@ public class Main extends PluginBase {
         saveDefaultConfig();
         config = getConfig();
         if (getServer().getLevelByName(config.getString("level")) != null) {
-            getServer().getScheduler().scheduleDelayedRepeatingTask(this, new Task(), config.getInt("tick"), config.getInt("tick"), true);
+            getServer().getScheduler().scheduleDelayedRepeatingTask(this, new Task(), config.getInt("tick"), config.getInt("tick"));
         } else {
             getServer().getLogger().notice("Plugin not enabled due to invalid world name in config");
         }
