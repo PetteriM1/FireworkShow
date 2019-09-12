@@ -15,7 +15,7 @@ import cn.nukkit.plugin.PluginBase;
 import cn.nukkit.utils.Config;
 import cn.nukkit.utils.DyeColor;
 
-import java.util.Random;
+import java.util.SplittableRandom;
 
 /**
  * SuomiCraft PE Events / New Year
@@ -23,7 +23,9 @@ import java.util.Random;
  */
 public class Main extends PluginBase {
 
-    public static Config config;
+    static Config config;
+
+    private static final SplittableRandom random = new SplittableRandom();
 
     @Override
     public void onEnable() {
@@ -40,7 +42,6 @@ public class Main extends PluginBase {
         Level level = Server.getInstance().getLevelByName(config.getString("level"));
         ItemFirework item = new ItemFirework();
         CompoundTag tag = new CompoundTag();
-        Random random = new Random();
         CompoundTag ex = new CompoundTag()
                 .putByteArray("FireworkColor", new byte[]{(byte) DyeColor.values()[random.nextInt(FireworkExplosion.ExplosionType.values().length)].getDyeData()})
                 .putByteArray("FireworkFade", new byte[]{})
@@ -73,7 +74,7 @@ class Task extends Thread {
 
     @Override
     public void run() {
-        if (Server.getInstance().getOnlinePlayers().size() > 0) {
+        if (!Server.getInstance().getOnlinePlayers().isEmpty()) {
             Main.spawnFirework(new Vector3(Main.config.getInt("pos1.x"), Main.config.getInt("pos1.y"), Main.config.getInt("pos1.z")));
             Main.spawnFirework(new Vector3(Main.config.getInt("pos2.x"), Main.config.getInt("pos2.y"), Main.config.getInt("pos2.z")));
             Main.spawnFirework(new Vector3(Main.config.getInt("pos3.x"), Main.config.getInt("pos3.y"), Main.config.getInt("pos3.z")));
