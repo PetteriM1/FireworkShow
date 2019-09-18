@@ -25,6 +25,8 @@ public class Main extends PluginBase {
 
     static Config config;
 
+    static String world;
+
     private static final SplittableRandom random = new SplittableRandom();
 
     @Override
@@ -32,6 +34,7 @@ public class Main extends PluginBase {
         saveDefaultConfig();
         config = getConfig();
         if (getServer().getLevelByName(config.getString("level")) != null) {
+            world = config.getString("level");
             getServer().getScheduler().scheduleDelayedRepeatingTask(this, new Task(), config.getInt("tick"), config.getInt("tick"));
         } else {
             getServer().getLogger().notice("Plugin not enabled due to invalid world name in config");
@@ -39,7 +42,7 @@ public class Main extends PluginBase {
     }
 
     public static void spawnFirework(Vector3 pos) {
-        Level level = Server.getInstance().getLevelByName(config.getString("level"));
+        Level level = Server.getInstance().getLevelByName(world);
         ItemFirework item = new ItemFirework();
         CompoundTag tag = new CompoundTag();
         CompoundTag ex = new CompoundTag()
@@ -74,7 +77,7 @@ class Task extends Thread {
 
     @Override
     public void run() {
-        if (!Server.getInstance().getOnlinePlayers().isEmpty()) {
+        if (!Server.getInstance().getLevelByName(Main.world).getPlayers().isEmpty()) {
             Main.spawnFirework(new Vector3(Main.config.getInt("pos1.x"), Main.config.getInt("pos1.y"), Main.config.getInt("pos1.z")));
             Main.spawnFirework(new Vector3(Main.config.getInt("pos2.x"), Main.config.getInt("pos2.y"), Main.config.getInt("pos2.z")));
             Main.spawnFirework(new Vector3(Main.config.getInt("pos3.x"), Main.config.getInt("pos3.y"), Main.config.getInt("pos3.z")));
