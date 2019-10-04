@@ -15,6 +15,8 @@ import cn.nukkit.plugin.PluginBase;
 import cn.nukkit.utils.Config;
 import cn.nukkit.utils.DyeColor;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.SplittableRandom;
 
 /**
@@ -23,25 +25,40 @@ import java.util.SplittableRandom;
  */
 public class Main extends PluginBase {
 
-    static Config config;
-
     static String world;
+
+    static boolean splitGroups;
+
+    static List<Vector3> positions = new ArrayList<>();
 
     private static final SplittableRandom random = new SplittableRandom();
 
     @Override
     public void onEnable() {
         saveDefaultConfig();
-        config = getConfig();
-        if (getServer().getLevelByName(config.getString("level")) != null) {
-            world = config.getString("level");
-            getServer().getScheduler().scheduleDelayedRepeatingTask(this, new Task(), config.getInt("tick"), config.getInt("tick"));
+        Config config = getConfig();
+
+        if (config.getInt("configVersion") != 2) {
+            getServer().getLogger().warning("Plugin not enabled due to invalid or outdated config");
+            return;
+        }
+
+        if (getServer().getLevelByName(config.getString("worldName")) != null) {
+            world = config.getString("worldName");
+            getServer().getScheduler().scheduleDelayedRepeatingTask(this, new Task(), config.getInt("spawnTick"), config.getInt("spawnTick"));
         } else {
-            getServer().getLogger().notice("Plugin not enabled due to invalid world name in config");
+            getServer().getLogger().warning("Plugin not enabled due to invalid world name in config");
+            return;
+        }
+
+        splitGroups = config.getBoolean("splitGroups");
+
+        for (int i = 0; i != config.getInt("positionCount"); i++) {
+            positions.add(new Vector3(config.getInt("pos" + i + ".x"), config.getInt("pos" + i + ".y"), config.getInt("pos" + i + ".z")));
         }
     }
 
-    public static void spawnFirework(Vector3 pos) {
+    static void spawnFirework(Vector3 pos) {
         Level level = Server.getInstance().getLevelByName(world);
         ItemFirework item = new ItemFirework();
         CompoundTag tag = new CompoundTag();
@@ -75,13 +92,32 @@ public class Main extends PluginBase {
 
 class Task extends Thread {
 
+    Task() {
+        setName("FireworkSpawnTask");
+    }
+
+    private int tick = 0;
+
     @Override
     public void run() {
         if (!Server.getInstance().getLevelByName(Main.world).getPlayers().isEmpty()) {
-            Main.spawnFirework(new Vector3(Main.config.getInt("pos1.x"), Main.config.getInt("pos1.y"), Main.config.getInt("pos1.z")));
-            Main.spawnFirework(new Vector3(Main.config.getInt("pos2.x"), Main.config.getInt("pos2.y"), Main.config.getInt("pos2.z")));
-            Main.spawnFirework(new Vector3(Main.config.getInt("pos3.x"), Main.config.getInt("pos3.y"), Main.config.getInt("pos3.z")));
-            Main.spawnFirework(new Vector3(Main.config.getInt("pos4.x"), Main.config.getInt("pos4.y"), Main.config.getInt("pos4.z")));
+            if (Main.splitGroups) {
+                if (tick == 0) {
+                      for (int i = 0; i != (Main.positions.size() / 2); i++) {
+                        Main.spawnFirework(Main.positions.get(i));
+                    }
+                } else {
+                    for (int i = (Main.positions.size() / 2); i != Main.positions.size(); i++) {
+                        Main.spawnFirework(Main.positions.get(i));
+                    }
+                }
+
+                tick = tick == 0 ? 1 : 0;
+            } else {
+                for (Vector3 pos : Main.positions) {
+                    Main.spawnFirework(pos);
+                }
+            }
         }
     }
 }

@@ -1,18 +1,38 @@
-tick: 60
-level: "lobby"
+configVersion: 2
+spawnTick: 40
+worldName: "lobby"
+positionCount: 8
+splitGroups: true
+
+pos0:
+  x: -12
+  y: 87
+  z: 29
 pos1:
-  x: 150
-  y: 50
-  z: 100
+  x: -29
+  y: 87
+  z: -12
 pos2:
-  x: 150
-  y: 50
-  z: 150
+  x: 12
+  y: 87
+  z: -29
 pos3:
-  x: 100
-  y: 50
-  z: 150
+  x: 29
+  y: 87
+  z: 12
 pos4:
-  x: 100
-  y: 50
-  z: 100
+  x: 12
+  y: 87
+  z: 29
+pos5:
+  x: -29
+  y: 87
+  z: 12
+pos6:
+  x: -12
+  y: 87
+  z: -29
+pos7:
+  x: 29
+  y: 87
+  z: -12
