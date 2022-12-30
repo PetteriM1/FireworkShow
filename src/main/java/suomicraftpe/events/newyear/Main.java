@@ -5,6 +5,7 @@ import cn.nukkit.entity.item.EntityFirework;
 import cn.nukkit.item.ItemFirework;
 import cn.nukkit.item.ItemFirework.FireworkExplosion;
 import cn.nukkit.level.Level;
+import cn.nukkit.level.format.FullChunk;
 import cn.nukkit.math.Vector3;
 import cn.nukkit.nbt.NBTIO;
 import cn.nukkit.nbt.tag.CompoundTag;
@@ -29,7 +30,7 @@ public class Main extends PluginBase {
 
     static boolean splitGroups;
 
-    static List<Vector3> positions = new ArrayList<>();
+    static final List<Vector3> positions = new ArrayList<>();
 
     private static final SplittableRandom random = new SplittableRandom();
 
@@ -85,16 +86,15 @@ public class Main extends PluginBase {
                         .add(new FloatTag("", 0))
                         .add(new FloatTag("", 0)))
                 .putCompound("FireworkItem", NBTIO.putItemHelper(item));
-        EntityFirework entity = new EntityFirework(level.getChunk((int) pos.x >> 4, (int) pos.z >> 4), nbt);
-        entity.spawnToAll();
+
+        FullChunk chunk = level.getChunkIfLoaded(pos.getChunkX(), pos.getChunkZ());
+        if (chunk != null) {
+            new EntityFirework(chunk, nbt).spawnToAll();
+        }
     }
 }
 
-class Task extends Thread {
-
-    Task() {
-        setName("FireworkSpawnTask");
-    }
+class Task implements Runnable {
 
     private int tick = 0;
 
