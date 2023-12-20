@@ -1,8 +1,11 @@
-configVersion: 2
+configVersion: 3
 spawnTick: 40
 worldName: "lobby"
-positionCount: 8
+fireworkFlightDuration: 1
+muteSpawnSound: true
+muteExplodeSound: false
 splitGroups: true
+positionCount: 8
 
 pos0:
   x: -12

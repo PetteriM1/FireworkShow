@@ -1,7 +1,6 @@
 package suomicraftpe.events.newyear;
 
 import cn.nukkit.Server;
-import cn.nukkit.entity.item.EntityFirework;
 import cn.nukkit.item.ItemFirework;
 import cn.nukkit.item.ItemFirework.FireworkExplosion;
 import cn.nukkit.level.Level;
@@ -27,19 +26,19 @@ import java.util.SplittableRandom;
 public class Main extends PluginBase {
 
     static String world;
-
+    static int fireworkFlightDuration;
+    static boolean muteSpawnSound;
+    static boolean muteExplodeSound;
     static boolean splitGroups;
-
     static final List<Vector3> positions = new ArrayList<>();
-
-    private static final SplittableRandom random = new SplittableRandom();
+    static final SplittableRandom random = new SplittableRandom();
 
     @Override
     public void onEnable() {
         saveDefaultConfig();
         Config config = getConfig();
 
-        if (config.getInt("configVersion") != 2) {
+        if (config.getInt("configVersion") != 3) {
             getServer().getLogger().warning("Plugin not enabled due to invalid or outdated config");
             return;
         }
@@ -52,6 +51,9 @@ public class Main extends PluginBase {
             return;
         }
 
+        fireworkFlightDuration = config.getInt("fireworkFlightDuration");
+        muteSpawnSound = config.getBoolean("muteSpawnSound");
+        muteExplodeSound = config.getBoolean("muteExplodeSound");
         splitGroups = config.getBoolean("splitGroups");
 
         for (int i = 0; i != config.getInt("positionCount"); i++) {
@@ -61,58 +63,59 @@ public class Main extends PluginBase {
 
     static void spawnFirework(Vector3 pos) {
         Level level = Server.getInstance().getLevelByName(world);
-        ItemFirework item = new ItemFirework();
-        CompoundTag tag = new CompoundTag();
-        CompoundTag ex = new CompoundTag()
-                .putByteArray("FireworkColor", new byte[]{(byte) DyeColor.values()[random.nextInt(FireworkExplosion.ExplosionType.values().length)].getDyeData()})
-                .putByteArray("FireworkFade", new byte[]{})
-                .putBoolean("FireworkFlicker", random.nextBoolean())
-                .putBoolean("FireworkTrail", random.nextBoolean())
-                .putByte("FireworkType", FireworkExplosion.ExplosionType.values()[random.nextInt(FireworkExplosion.ExplosionType.values().length)].ordinal());
-        tag.putCompound("Fireworks", new CompoundTag("Fireworks")
-                .putList(new ListTag<CompoundTag>("Explosions").add(ex))
-                .putByte("Flight", 1));
-        item.setNamedTag(tag);
-        CompoundTag nbt = new CompoundTag()
-                .putList(new ListTag<DoubleTag>("Pos")
-                        .add(new DoubleTag("", pos.x + 0.5))
-                        .add(new DoubleTag("", pos.y + 0.5))
-                        .add(new DoubleTag("", pos.z + 0.5)))
-                .putList(new ListTag<DoubleTag>("Motion")
-                        .add(new DoubleTag("", 0))
-                        .add(new DoubleTag("", 0))
-                        .add(new DoubleTag("", 0)))
-                .putList(new ListTag<FloatTag>("Rotation")
-                        .add(new FloatTag("", 0))
-                        .add(new FloatTag("", 0)))
-                .putCompound("FireworkItem", NBTIO.putItemHelper(item));
-
         FullChunk chunk = level.getChunkIfLoaded(pos.getChunkX(), pos.getChunkZ());
+
         if (chunk != null) {
-            new EntityFirework(chunk, nbt).spawnToAll();
+            ItemFirework item = new ItemFirework();
+            CompoundTag tag = new CompoundTag();
+            CompoundTag ex = new CompoundTag()
+                    .putByteArray("FireworkColor", new byte[]{(byte) DyeColor.values()[random.nextInt(FireworkExplosion.ExplosionType.values().length)].getDyeData()})
+                    .putByteArray("FireworkFade", new byte[]{})
+                    .putBoolean("FireworkFlicker", random.nextBoolean())
+                    .putBoolean("FireworkTrail", random.nextBoolean())
+                    .putByte("FireworkType", FireworkExplosion.ExplosionType.values()[random.nextInt(FireworkExplosion.ExplosionType.values().length)].ordinal());
+            tag.putCompound("Fireworks", new CompoundTag("Fireworks")
+                    .putList(new ListTag<CompoundTag>("Explosions").add(ex))
+                    .putByte("Flight", fireworkFlightDuration));
+            item.setNamedTag(tag);
+            CompoundTag nbt = new CompoundTag()
+                    .putList(new ListTag<DoubleTag>("Pos")
+                            .add(new DoubleTag("", pos.x + 0.5))
+                            .add(new DoubleTag("", pos.y + 0.5))
+                            .add(new DoubleTag("", pos.z + 0.5)))
+                    .putList(new ListTag<DoubleTag>("Motion")
+                            .add(new DoubleTag("", 0))
+                            .add(new DoubleTag("", 0))
+                            .add(new DoubleTag("", 0)))
+                    .putList(new ListTag<FloatTag>("Rotation")
+                            .add(new FloatTag("", 0))
+                            .add(new FloatTag("", 0)))
+                    .putCompound("FireworkItem", NBTIO.putItemHelper(item));
+
+            new EntityFireworkCustom(chunk, nbt).spawnToAll();
         }
     }
 }
 
 class Task implements Runnable {
 
-    private int tick = 0;
+    private boolean tick;
 
     @Override
     public void run() {
         if (!Server.getInstance().getLevelByName(Main.world).getPlayers().isEmpty()) {
             if (Main.splitGroups) {
-                if (tick == 0) {
-                      for (int i = 0; i != (Main.positions.size() / 2); i++) {
+                if (tick) {
+                      for (int i = 0; i != (Main.positions.size() >> 1); i++) {
                         Main.spawnFirework(Main.positions.get(i));
                     }
                 } else {
-                    for (int i = (Main.positions.size() / 2); i != Main.positions.size(); i++) {
+                    for (int i = (Main.positions.size() >> 1); i != Main.positions.size(); i++) {
                         Main.spawnFirework(Main.positions.get(i));
                     }
                 }
 
-                tick = tick == 0 ? 1 : 0;
+                tick = !tick;
             } else {
                 for (Vector3 pos : Main.positions) {
                     Main.spawnFirework(pos);
