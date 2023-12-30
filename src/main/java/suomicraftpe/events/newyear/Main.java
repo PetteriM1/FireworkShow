@@ -63,6 +63,7 @@ public class Main extends PluginBase {
 
     static void spawnFirework(Vector3 pos) {
         Level level = Server.getInstance().getLevelByName(world);
+        level.threadedExecutor.execute(() -> {
         FullChunk chunk = level.getChunkIfLoaded(pos.getChunkX(), pos.getChunkZ());
 
         if (chunk != null) {
@@ -93,7 +94,7 @@ public class Main extends PluginBase {
                     .putCompound("FireworkItem", NBTIO.putItemHelper(item));
 
             new EntityFireworkCustom(chunk, nbt).spawnToAll();
-        }
+        }});
     }
 }
 
@@ -103,7 +104,7 @@ class Task implements Runnable {
 
     @Override
     public void run() {
-        if (!Server.getInstance().getLevelByName(Main.world).getPlayers().isEmpty()) {
+        {
             if (Main.splitGroups) {
                 if (tick) {
                       for (int i = 0; i != (Main.positions.size() >> 1); i++) {
